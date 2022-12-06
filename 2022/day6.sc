@@ -14,5 +14,14 @@ def findfirstUnique(input: String, s: Int): Int =
     .get
     ._2 + s
 
+def findFirstUniqueEfficient(input: String, s:Int): Int =
+  val sub = input.substring(0, s)
+  if (sub.distinct.length == s)
+    s
+  else
+    1 + findFirstUniqueEfficient(input.substring(1), s)
+
 println(findfirstUnique(input, 4))
 println(findfirstUnique(input, 14))
+println(findFirstUniqueEfficient(input, 4))
+println(findFirstUniqueEfficient(input, 14))
