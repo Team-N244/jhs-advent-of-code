@@ -7,21 +7,23 @@ import scala.io.Source
 
 def readFile(f: String): Seq[String] = Source.fromFile(f).getLines.toSeq
 
-class Monkey(starting: Seq[Long], op: Long => Long, test: Long => (Long, Int)):
+class Monkey(starting: Seq[Long], op: Long => Long, test: (Long, Long) => (Long, Int)):
   private var items = starting
   private var seen = 0
 
   def itemsSeen: Int = seen
 
-  def round(): Seq[(Long, Int)] =
+  def round(divisor: Long): Seq[(Long, Int)] =
     val results = items
       .map(op)
-      .map(test)
+      .map(test(_, divisor))
     seen += results.length
     items = Nil
     results
 
   def add(item: Long): Unit = items = items :+ item
+
+var divisor = 1L
 
 val monkeys = readFile("day11-input.txt")
   .filterNot(_.trim.isEmpty)
@@ -39,17 +41,19 @@ val monkeys = readFile("day11-input.txt")
       case "/" => (old: Long) => old / opparsed.last.toLong
 
     val testValue = lines(3).replaceAll("Test: divisible by", "").trim.toInt
+    divisor *= testValue
     val trueMonkey = lines(4).replaceAll("If true: throw to monkey", "").trim.toInt
     val falseMonkey = lines(5).replaceAll("If false: throw to monkey", "").trim.toInt
-    val test = (input: Long) => if input % testValue == 0 then input / testValue -> trueMonkey else input -> falseMonkey
-
+    val test = (input: Long, divisor: Long) => {
+      if input % testValue == 0 then input % divisor -> trueMonkey else input % divisor -> falseMonkey
+    }
     new Monkey(starting, op, test)
   }
   .toArray
 
 for (i <- 0 until 10000) {
   for (m <- monkeys.indices) {
-    val items = monkeys(m).round()
+    val items = monkeys(m).round(divisor)
     items.foreach { case (item, monkey) =>
       monkeys(monkey).add(item)
     }
